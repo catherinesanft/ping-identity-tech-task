@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockticker
+  namespace: default
+  labels:
+    app: stockticker
+spec:
+  # Sticking to 1 replica because the cache is in-memory and per-process
+  # (see the README's Known Limitations section) - more than one pod
+  # would just mean each one hits Alpha Vantage independently instead of
+  # sharing a cached result, which defeats the point given the API's
+  # quota limits.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockticker
+  template:
+    metadata:
+      labels:
+        app: stockticker
+    spec:
+      containers:
+        - name: stockticker
+          # Meant for a local vanilla cluster (minikube) using an image
+          # loaded in directly - not pulled from a registry.
+          image: stockticker:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: stockticker-config
+            - secretRef:
+                name: stockticker-secret
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi

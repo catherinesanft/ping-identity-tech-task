@@ -1,0 +1,9 @@
+# SYMBOL and NDAYS as specified in the exercise brief.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stockticker-config
+  namespace: default
+data:
+  SYMBOL: "MSFT"
+  NDAYS: "7"
