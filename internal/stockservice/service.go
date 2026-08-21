@@ -1,6 +1,7 @@
 package stockservice
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,7 +10,7 @@ import (
 
 // DailyPointSource supplies daily closing prices for a symbol.
 type DailyPointSource interface {
-	GetDailyCloses(symbol string, limit int) ([]alphavantage.DailyPoint, error)
+	GetDailyCloses(ctx context.Context, symbol string, limit int) ([]alphavantage.DailyPoint, error)
 }
 
 // Service computes statistics over daily closing prices.
@@ -29,13 +30,14 @@ type Result struct {
 }
 
 // Compute fetches up to days daily closes for symbol and returns them
-// along with their average closing price.
-func (s *Service) Compute(symbol string, days int) (*Result, error) {
+// along with their average closing price. ctx is passed through to the
+// underlying DailyPointSource for cancellation and deadlines.
+func (s *Service) Compute(ctx context.Context, symbol string, days int) (*Result, error) {
 	if days <= 0 {
 		return nil, fmt.Errorf("days must be positive, got %d", days)
 	}
 
-	points, err := s.source.GetDailyCloses(symbol, days)
+	points, err := s.source.GetDailyCloses(ctx, symbol, days)
 	if err != nil {
 		return nil, fmt.Errorf("get daily closes for %s: %w", symbol, err)
 	}

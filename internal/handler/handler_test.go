@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +23,7 @@ type countingSource struct {
 	err    error
 }
 
-func (s *countingSource) GetDailyCloses(symbol string, limit int) ([]alphavantage.DailyPoint, error) {
+func (s *countingSource) GetDailyCloses(ctx context.Context, symbol string, limit int) ([]alphavantage.DailyPoint, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.calls++

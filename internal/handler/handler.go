@@ -50,7 +50,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.Compute(h.symbol, h.days)
+	result, err := h.service.Compute(r.Context(), h.symbol, h.days)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return

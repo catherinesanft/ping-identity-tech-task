@@ -3,6 +3,7 @@
 package alphavantage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -59,8 +60,9 @@ type dailyPointJSON struct {
 }
 
 // GetDailyCloses fetches daily closing prices for symbol, most recent
-// first, capped at limit entries.
-func (c *Client) GetDailyCloses(symbol string, limit int) ([]DailyPoint, error) {
+// first, capped at limit entries. It respects ctx cancellation and
+// deadlines for the underlying HTTP call.
+func (c *Client) GetDailyCloses(ctx context.Context, symbol string, limit int) ([]DailyPoint, error) {
 	outputSize := "compact" // covers the most recent 100 daily points
 	if limit > 100 {
 		outputSize = "full"
@@ -73,7 +75,12 @@ func (c *Client) GetDailyCloses(symbol string, limit int) ([]DailyPoint, error) 
 		"apikey":     {c.APIKey},
 	}.Encode()
 
-	resp, err := c.HTTPClient.Get(reqURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("alphavantage: build request: %w", err)
+	}
+
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("alphavantage: request failed: %w", err)
 	}

@@ -1,6 +1,7 @@
 package stockservice
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ type fakeSource struct {
 	err    error
 }
 
-func (f *fakeSource) GetDailyCloses(symbol string, limit int) ([]alphavantage.DailyPoint, error) {
+func (f *fakeSource) GetDailyCloses(ctx context.Context, symbol string, limit int) ([]alphavantage.DailyPoint, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -95,7 +96,7 @@ func TestCompute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := New(tt.source)
-			result, err := svc.Compute(tt.symbol, tt.days)
+			result, err := svc.Compute(context.Background(), tt.symbol, tt.days)
 
 			if tt.wantErr != nil {
 				if err == nil || !errors.Is(err, tt.wantErr) {
